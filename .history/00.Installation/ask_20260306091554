@@ -939,10 +939,6 @@ function do_installation() {
         bash $local_packages/package/flexget/install   --logbase $LogTimes
         bash $local_packages/package/flexget/configure --logbase $LogTimes -u $iUser -p $iPass -w 9566 $force_recover
     fi
-    if [[ $InsAutobrr == Yes ]]; then
-        bash $local_packages/package/autobrr/install   --logbase $LogTimes
-        bash $local_packages/package/autobrr/configure --logbase $LogTimes -u $iUser -p $iPass
-    fi
     if [[ $InsRclone == Yes ]]; then
         bash $local_packages/package/rclone/install --logbase $LogTimes
         echo -ne "Installing gclone ... "

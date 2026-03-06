@@ -71,7 +71,7 @@ function _oscheck() {
     elif [[ $SysSupport == "3" ]]; then
         echo -e "\n${bold}你可以使用这个脚本来升级系统，以使用本脚本\n${blue}https://github.com/DieNacht/debian-ubuntu-upgrade${normal}"
     else
-        echo -e "\n${bold}${red}Too young too simple! Only Debian 9/10/11/12/13 and Ubuntu 16.04/18.04 is supported by this script${normal}"
+        echo -e "\n${bold}${red}Too young too simple! Only Debian 9/10 and Ubuntu 16.04/18.04 is supported by this script${normal}"
         echo -e "${bold}If you want to run this script on unsupported distro, please use -s option\nExiting...${normal}\n"
         exit 1
     fi
@@ -100,14 +100,13 @@ function _intro() {
 
     # 检查系统版本；不是 Ubuntu 或 Debian 的就不管了，反正不支持……
     SysSupport=0
-    [[ $CODENAME =~ (trixie|bookworm|bullseye) ]] && SysSupport=1
     [[ $CODENAME =~ (bionic|buster)  ]] && SysSupport=1
     [[ $CODENAME =~ (xenial|stretch) ]] && SysSupport=2
     [[ $CODENAME =~ (jessie|wheezy|trusty) ]] && SysSupport=3
     [[ $DeBUG == 1 ]] && echo "${bold}DISTRO=$DISTRO, CODENAME=$CODENAME, osversion=$osversion, SysSupport=$SysSupport${normal}"
 
     # rTorrent 是否只能安装 feature-bind branch 的 0.9.6 或者 0.9.7 及以上
-    [[ $CODENAME =~ (stretch|bionic|buster|bullseye|bookworm|trixie) ]] && rtorrent_dev=1
+    [[ $CODENAME =~ (stretch|bionic|buster) ]] && rtorrent_dev=1
 
     # 检查本脚本是否支持当前系统，可以关闭此功能
     [[ $SYSTEMCHECK == 1 ]] && [[ $distro_up != Yes ]] && _oscheck
@@ -187,7 +186,6 @@ function ask_continue() {
 
     echo "                  ${cyan}${bold}Transmission${normal}  ${bold}${yellow}${tr_version}${normal}"
     echo "                  ${cyan}${bold}FlexGet${normal}       ${bold}${yellow}${InsFlex}${normal}"
-    echo "                  ${cyan}${bold}autobrr${normal}       ${bold}${yellow}${InsAutobrr}${normal}"
     echo "                  ${cyan}${bold}FileBrowser${normal}   ${bold}${yellow}${InsFB}${normal}"
     echo "                  ${cyan}${bold}System Tweak${normal}  ${bold}${yellow}${UseTweaks}${normal}"
     echo "                  ${cyan}${bold}Threads${normal}       ${bold}${yellow}${MAXCPUS}${normal}"
@@ -458,7 +456,6 @@ ask_deluge
 ask_rtorrent
 ask_transmission
 ask_flexget
-ask_autobrr
 ask_filebrowser
 ask_tweaks
 

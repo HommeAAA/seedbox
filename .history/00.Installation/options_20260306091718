@@ -102,7 +102,6 @@ function opts_action () {
         --no-swap         ) USESWAP="No"      ; shift ;;
         --no-filebrowser  ) InsFB="No"        ; shift ;;
         --no-flexget      ) InsFlex="No"      ; shift ;;
-        --no-autobrr      ) InsAutobrr="No"   ; shift ;;
         --no-tweaks       ) UseTweaks="No"    ; shift ;;
         --no-bbr          ) InsBBR="No"       ; shift ;;
         --no-source-change) aptsources="No"   ; shift ;;

@@ -1,0 +1,305 @@
+# Debian 13 兼容性优化计划
+
+## 项目概况
+
+**项目名称**: inexistence (种子盒安装脚本)  
+**当前支持系统**: Debian 9/10, Ubuntu 16.04/18.04  
+**最后更新**: 2021年7月30日  
+**目标**: 使其兼容 Debian 13 (Trixie)
+
+## 一、核心问题分析
+
+### 1.1 系统版本检测问题
+**位置**: `inexistence.sh` 第103-105行
+
+**当前代码**:
+```bash
+[[ $CODENAME =~ (bionic|buster)  ]] && SysSupport=1
+[[ $CODENAME =~ (xenial|stretch) ]] && SysSupport=2
+[[ $CODENAME =~ (jessie|wheezy|trusty) ]] && SysSupport=3
+```
+
+**问题**: 
+- 只识别到 Debian 10 (buster)
+- 缺少对 Debian 11/12/13 的支持
+
+**解决方案**:
+- 添加 bullseye (11)、bookworm (12)、trixie (13) 的识别
+- 更新支持等级划分
+
+### 1.2 APT 源配置问题
+**位置**: `00.Installation/function` 第629-661行
+
+**当前代码**:
+```bash
+deb http://security.debian.org/ $CODENAME/updates main contrib non-free
+```
+
+**问题**:
+- Debian 13 的安全源格式已改变
+- 新版本使用 `security.debian.org/debian-security` 格式
+
+**解决方案**:
+- 更新安全源配置格式
+- 添加 Debian 13 特定的源配置
+
+### 1.3 Python 版本问题
+**影响范围**: 多个安装脚本
+
+**问题**:
+- Debian 13 默认使用 Python 3.11+ 
+- 可能已完全移除 Python 2.7
+- FlexGet 等依赖 Python 的软件需要适配
+
+**解决方案**:
+- 移除所有 Python 2.7 相关代码
+- 使用系统自带的 Python 3
+- 更新 pyenv 安装逻辑
+
+### 1.4 软件包兼容性问题
+
+#### 1.4.1 qBittorrent
+**位置**: `00.Installation/package/qbittorrent/install`
+
+**问题**:
+- 预编译的 deb 包可能不兼容
+- Qt 版本可能不匹配
+- 编译依赖可能需要更新
+
+**解决方案**:
+- 优先使用静态编译版本
+- 更新编译依赖列表
+- 测试源码编译流程
+
+#### 1.4.2 Deluge
+**位置**: `00.Installation/package/deluge/install`
+
+**问题**:
+- Python 2.7 依赖问题
+- libtorrent-rasterbar Python 绑定
+
+**解决方案**:
+- 强制使用 Deluge 2.x (Python 3)
+- 更新 libtorrent 编译参数
+
+#### 1.4.3 libtorrent-rasterbar
+**位置**: `00.Installation/package/libtorrent-rasterbar`
+
+**问题**:
+- 编译参数可能需要调整
+- C++ 标准版本
+- Boost 库版本
+
+**解决方案**:
+- 更新编译标志
+- 测试不同版本的兼容性
+
+#### 1.4.4 rTorrent
+**位置**: 相关安装脚本
+
+**问题**:
+- OpenSSL 版本限制
+- 特定版本要求
+
+**解决方案**:
+- 验证 rTorrent 0.9.7+ 在 Debian 13 上的兼容性
+- 更新版本限制逻辑
+
+## 二、详细修改计划
+
+### 2.1 系统检测模块 (高优先级)
+
+**文件**: `inexistence.sh`
+
+**修改内容**:
+1. 第103-105行：添加新版本识别
+   ```bash
+   [[ $CODENAME =~ (trixie) ]] && SysSupport=1
+   [[ $CODENAME =~ (bookworm) ]] && SysSupport=1
+   [[ $CODENAME =~ (bullseye) ]] && SysSupport=1
+   [[ $CODENAME =~ (bionic|buster) ]] && SysSupport=1
+   [[ $CODENAME =~ (xenial|stretch) ]] && SysSupport=2
+   ```
+
+2. 第109行：更新 rTorrent 版本限制
+   ```bash
+   [[ $CODENAME =~ (stretch|bionic|buster|bullseye|bookworm|trixie) ]] && rtorrent_dev=1
+   ```
+
+3. 第74行：更新错误提示信息
+   ```bash
+   echo -e "\n${bold}${red}Too young too simple! Only Debian 9/10/11/12/13 and Ubuntu 16.04/18.04 is supported by this script${normal}"
+   ```
+
+### 2.2 APT 源配置模块 (高优先级)
+
+**文件**: `00.Installation/function`
+
+**修改内容**:
+1. 第629-641行：更新 `apt_sources_replace` 函数
+   ```bash
+   function apt_sources_replace() {
+       if [[ $DISTRO == Debian ]] ; then
+           # Debian 13+ 使用新的安全源格式
+           if [[ $CODENAME =~ (trixie|bookworm) ]]; then
+               cat << EOF > /etc/apt/sources.list
+   deb http://ftp.debian.org/debian/ $CODENAME main contrib non-free non-free-firmware
+   deb-src http://ftp.debian.org/debian/ $CODENAME main contrib non-free non-free-firmware
+   deb http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free non-free-firmware
+   deb-src http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free non-free-firmware
+   deb http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware
+   deb-src http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware
+   
+   deb http://security.debian.org/debian-security $CODENAME-security main contrib non-free non-free-firmware
+   deb-src http://security.debian.org/debian-security $CODENAME-security main contrib non-free non-free-firmware
+   EOF
+           else
+               # 旧版本保持原有格式
+               cat << EOF > /etc/apt/sources.list
+   deb http://ftp.debian.org/debian/ $CODENAME main contrib non-free
+   deb-src http://ftp.debian.org/debian/ $CODENAME main contrib non-free
+   deb http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free
+   deb-src http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free
+   deb http://ftp.debian.org/debian $CODENAME-backports main contrib non-free
+   deb-src http://ftp.debian.org/debian $CODENAME-backports main contrib non-free
+   
+   deb http://security.debian.org/ $CODENAME/updates main contrib non-free
+   deb-src http://security.debian.org/ $CODENAME/updates main contrib non-free
+   EOF
+           fi
+       elif [[ $DISTRO == Ubuntu ]] ; then
+           # Ubuntu 保持不变
+           ...
+       fi
+   }
+   ```
+
+### 2.3 Python 相关模块 (高优先级)
+
+**文件**: `00.Installation/package/pyenv`, `00.Installation/package/flexget/install`
+
+**修改内容**:
+1. 移除 Python 2.7 相关代码
+2. 更新 Python 版本检测逻辑
+3. 使用系统 Python 3 作为默认
+
+### 2.4 软件包安装模块 (中优先级)
+
+#### 2.4.1 qBittorrent
+**文件**: `00.Installation/package/qbittorrent/install`
+
+**修改内容**:
+- 更新依赖包列表
+- 优先使用静态编译版本
+- 更新 Qt 相关配置
+
+#### 2.4.2 Deluge
+**文件**: `00.Installation/package/deluge/install`
+
+**修改内容**:
+- 移除 Python 2.7 支持
+- 强制使用 Deluge 2.x
+- 更新依赖检测
+
+#### 2.4.3 libtorrent-rasterbar
+**文件**: `00.Installation/package/libtorrent-rasterbar`
+
+**修改内容**:
+- 更新编译参数
+- 测试 Python 3 绑定
+- 更新 C++ 标准版本
+
+### 2.5 文档更新 (低优先级)
+
+**文件**: `README.md`, `ChangeLOG.md`
+
+**修改内容**:
+- 更新支持系统列表
+- 添加 Debian 13 相关说明
+- 记录所有变更
+
+## 三、测试计划
+
+### 3.1 测试环境
+- Debian 13 (Trixie) 最小化安装
+- x86_64 架构
+- KVM 虚拟化
+
+### 3.2 测试项目
+1. ✅ 系统检测功能
+2. ✅ APT 源配置
+3. ⬜ 基础包安装
+4. ⬜ qBittorrent 安装（静态版）
+5. ⬜ qBittorrent 安装（编译版）
+6. ⬜ Deluge 安装
+7. ⬜ rTorrent 安装
+8. ⬜ Transmission 安装
+9. ⬜ FlexGet 安装
+10. ⬜ FileBrowser 安装
+11. ⬜ 系统优化功能
+
+### 3.3 兼容性测试
+- 测试在 Debian 11/12 上是否仍然正常工作
+- 测试升级路径（从旧版本 Debian 升级）
+
+## 四、风险评估
+
+### 4.1 高风险项
+1. **Python 2.7 移除**: 可能导致某些旧版本软件无法安装
+2. **编译依赖**: 新版本库可能导致编译失败
+3. **预编译包**: deb 包可能不兼容
+
+### 4.2 中风险项
+1. **配置文件格式**: 某些配置文件格式可能已改变
+2. **服务管理**: systemd 版本差异
+3. **网络配置**: 网络工具版本差异
+
+### 4.3 低风险项
+1. **文档更新**: 纯文本更新，无功能影响
+2. **提示信息**: 仅影响用户界面
+
+## 五、实施步骤
+
+### 阶段一：核心功能适配（必须）
+1. ✅ 更新系统版本检测
+2. ✅ 更新 APT 源配置
+3. ✅ 移除 Python 2.7 依赖
+4. ✅ 更新基础包列表
+
+### 阶段二：软件包适配（必须）
+1. ⬜ 更新 qBittorrent 安装脚本
+2. ⬜ 更新 Deluge 安装脚本
+3. ⬜ 更新 libtorrent 编译脚本
+4. ⬜ 更新 rTorrent 安装脚本
+
+### 阶段三：测试验证（必须）
+1. ⬜ 在 Debian 13 上完整测试
+2. ⬜ 在 Debian 11/12 上回归测试
+3. ⬜ 修复发现的问题
+
+### 阶段四：文档更新（可选）
+1. ✅ 更新 README
+2. ⬜ 更新 ChangeLOG
+3. ⬜ 添加迁移指南
+
+## 六、预期成果
+
+完成后，脚本将：
+1. ✅ 支持 Debian 9/10/11/12/13
+2. ✅ 兼容 Python 3.11+
+3. ✅ 使用最新的软件源格式
+4. ✅ 保持对旧版本的兼容性
+5. ⬜ 提供完整的测试报告
+
+## 七、注意事项
+
+1. **向后兼容**: 确保不破坏对 Debian 9/10 的支持
+2. **最小改动**: 只修改必要的部分，避免引入新 bug
+3. **测试充分**: 每个修改都要经过充分测试
+4. **文档同步**: 代码修改后及时更新文档
+
+---
+
+**计划制定日期**: 2026-03-06  
+**预计完成时间**: 根据测试结果调整  
+**负责人**: Claude AI Assistant

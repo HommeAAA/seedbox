@@ -1,0 +1,151 @@
+╔════════════════════════════════════════╗
+║   Debian 13 全面兼容性审查            ║
+║         集成测试套件                   ║
+╚════════════════════════════════════════╝
+
+
+=========================================
+1. 核心组件集成测试
+=========================================
+测试核心组件之间的集成...
+✅ PASS: inexistence.sh 能找到 function 文件
+✅ PASS: inexistence.sh 能找到 ask 文件
+✅ PASS: inexistence.sh 能找到 options 文件
+✅ PASS: ask 文件能调用安装脚本
+
+=========================================
+2. 软件包模块集成测试
+=========================================
+测试软件包模块与核心的集成...
+✅ PASS: 软件包有 install 脚本: autobrr
+✅ PASS:   install 脚本有日志记录: autobrr
+✅ PASS:   install 脚本有错误处理: autobrr
+✅ PASS: 软件包有 configure 脚本: autobrr
+✅ PASS:   configure 脚本有用户配置: autobrr
+✅ PASS: 软件包有 install 脚本: deluge
+✅ PASS:   install 脚本有日志记录: deluge
+✅ PASS:   install 脚本有错误处理: deluge
+✅ PASS: 软件包有 configure 脚本: deluge
+✅ PASS:   configure 脚本有用户配置: deluge
+✅ PASS: 软件包有 install 脚本: flexget
+✅ PASS:   install 脚本有日志记录: flexget
+⚠️  WARN:   install 脚本可能缺少错误处理: flexget
+✅ PASS: 软件包有 configure 脚本: flexget
+✅ PASS:   configure 脚本有用户配置: flexget
+✅ PASS: 软件包有 install 脚本: qbittorrent
+✅ PASS:   install 脚本有日志记录: qbittorrent
+✅ PASS:   install 脚本有错误处理: qbittorrent
+✅ PASS: 软件包有 configure 脚本: qbittorrent
+✅ PASS:   configure 脚本有用户配置: qbittorrent
+✅ PASS: 软件包有 install 脚本: transmission
+✅ PASS:   install 脚本有日志记录: transmission
+✅ PASS:   install 脚本有错误处理: transmission
+✅ PASS: 软件包有 configure 脚本: transmission
+✅ PASS:   configure 脚本有用户配置: transmission
+
+=========================================
+3. 命令行选项集成测试
+=========================================
+测试命令行选项与主脚本的集成...
+⚠️  WARN: 命令行选项可能缺失: --qb
+⚠️  WARN: 命令行选项可能缺失: --de
+⚠️  WARN: 命令行选项可能缺失: --rt
+⚠️  WARN: 命令行选项可能缺失: --tr
+⚠️  WARN: 命令行选项可能缺失: --flexget
+⚠️  WARN: 命令行选项可能缺失: --autobrr
+⚠️  WARN: 命令行选项可能缺失: --filebrowser
+⚠️  WARN: 命令行选项可能缺失: --tweaks
+⚠️  WARN: 命令行选项可能缺失: --bbr
+⚠️  WARN: 命令行选项可能缺失: --rclone
+⚠️  WARN: 命令行选项可能缺失: --swap
+⚠️  WARN: 否定选项可能缺失: --no-qb
+⚠️  WARN: 否定选项可能缺失: --no-de
+⚠️  WARN: 否定选项可能缺失: --no-rt
+⚠️  WARN: 否定选项可能缺失: --no-tr
+⚠️  WARN: 否定选项可能缺失: --no-flexget
+⚠️  WARN: 否定选项可能缺失: --no-autobrr
+⚠️  WARN: 否定选项可能缺失: --no-filebrowser
+⚠️  WARN: 否定选项可能缺失: --no-tweaks
+⚠️  WARN: 否定选项可能缺失: --no-bbr
+⚠️  WARN: 否定选项可能缺失: --no-swap
+
+=========================================
+4. 变量传递集成测试
+=========================================
+测试变量在不同组件之间的传递...
+✅ PASS: 变量在主脚本中存在: iUser
+✅ PASS:   变量在 function 中存在: iUser
+✅ PASS: 变量在主脚本中存在: iPass
+✅ PASS:   变量在 function 中存在: iPass
+⚠️  WARN: 变量可能在主脚本中缺失: iHome
+✅ PASS:   变量在 function 中存在: iHome
+✅ PASS: 变量在主脚本中存在: SysSupport
+✅ PASS: 变量在主脚本中存在: DISTRO
+✅ PASS:   变量在 function 中存在: DISTRO
+✅ PASS: 变量在主脚本中存在: CODENAME
+✅ PASS:   变量在 function 中存在: CODENAME
+✅ PASS: 变量在主脚本中存在: OutputLOG
+✅ PASS:   变量在 function 中存在: OutputLOG
+✅ PASS: 变量在主脚本中存在: MAXCPUS
+✅ PASS:   变量在 function 中存在: MAXCPUS
+
+=========================================
+5. 日志系统集成测试
+=========================================
+测试日志系统的集成...
+✅ PASS: 主脚本使用 OutputLOG
+✅ PASS: function 文件使用 OutputLOG
+✅ PASS: function 文件有 echo_task
+
+=========================================
+6. 状态管理集成测试
+=========================================
+测试安装状态管理...
+✅ PASS: function 文件有 status_lock 概念
+✅ PASS: function 文件有锁文件机制
+
+=========================================
+7. 错误处理集成测试
+=========================================
+测试错误处理机制...
+⚠️  WARN: 主脚本可能缺少 set -e
+✅ PASS: function 文件有错误返回
+✅ PASS: function 文件有 echo_error
+
+=========================================
+8. 用户交互集成测试
+=========================================
+测试用户交互机制...
+⚠️  WARN: ask 文件可能缺少用户输入
+✅ PASS: ask 文件有 ForceYes 选项
+
+=========================================
+9. apt 相关集成测试
+=========================================
+测试 apt 相关功能...
+✅ PASS: function 文件有 apt 安装函数
+✅ PASS: function 文件有 apt 源函数
+✅ PASS: function 文件有新版本 Debian 支持
+
+=========================================
+10. 系统服务集成测试
+=========================================
+测试系统服务管理...
+✅ PASS: function 文件有 systemctl
+✅ PASS: function 文件有 systemd 服务文件创建
+
+=========================================
+集成测试总结
+=========================================
+
+╔════════════════════════════════════════╗
+║          测试结果统计                 ║
+╚════════════════════════════════════════╝
+
+✅ 通过: 55
+❌ 失败: 0
+⚠️  警告: 25
+
+╔════════════════════════════════════════╗
+║   ✅ 所有集成测试通过！              ║
+╚════════════════════════════════════════╝

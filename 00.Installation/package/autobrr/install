@@ -1,0 +1,227 @@
+#!/bin/bash
+#
+# https://github.com/Aniverse/inexistence
+# Author: Aniverse
+#
+script_update=2026.03.06
+script_version=r10001
+
+################################################################################################ Debug
+
+usage_for_debug() {
+    export local_packages=/etc/inexistence/00.Installation
+    export s=$local_packages/package/autobrr/install
+    rm -f $s ; nano $s
+    bash $s -v latest --logbase $LogTimes
+    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/autobrr/install) -v latest
+}
+
+################################################################################################ Get options
+
+unset LogBase LogTimes SCLocation DebLocation LogLocation LOCKLocation OutputLOG \
+      AppName AppNameLower Need_SourceCode pm_action \
+      version mode debug
+
+AppName=autobrr
+AppNameLower=autobrr
+AppExec=/usr/local/bin/autobrr
+DebName=autobrr
+Need_SourceCode=no
+pm_action=install
+
+function show_usage() { echo "
+$AppName $pm_action $script_version ($script_update)
+Usage:
+      -v        Specifiy which version to be installed (default: latest)
+      -m        Install mode, can only be specified as binary
+      -l        Specifiy LogBase
+      -d        Enable debug mode
+"
+exit 1 ; }
+
+OPTS=$(getopt -o v:l:m:d -al mode:,version:,debug,logbase:,log -- "$@")
+[ ! $? = 0 ] && show_usage
+eval set -- "$OPTS"
+
+while [ -n "$1" ] ; do case "$1" in
+    -v | --version      ) version="$2"  ; shift 2 ;;
+    -m | --mode         ) mode="$2"     ; shift 2 ;;
+    -l | --logbase      ) LogTimes="$2" ; shift 2 ;;
+    -d | --debug        ) debug=1       ; shift   ;;
+         --log          ) show_log=1    ; shift   ;;
+         --             ) shift         ; break   ;;
+esac ; done
+
+################################################################################################ Set Variables 1
+
+if [[ -f /etc/inexistence/00.Installation/function ]]; then
+    source /etc/inexistence/00.Installation/function
+else
+    source <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/function)
+fi
+
+set_variables_log_location
+check_var_OutputLOG
+debug_log_location
+cat_outputlog
+
+################################################################################################ Set Variables 2
+
+[[ -z $version ]] && version=latest
+[[ -z $mode ]] && mode=binary
+[[ $mode != binary ]] && echo_error_exit "Mode can only be specified as binary"
+
+autobrr_latest_url="https://api.github.com/repos/autobrr/autobrr/releases/latest"
+autobrr_download_url="https://github.com/autobrr/autobrr/releases/download"
+
+################################################################################################ Functions
+
+function install_autobrr_binary() {
+    lines2 >> $OutputLOG
+    status_lock=$AppNameLower
+    echo "status_lock=$status_lock" > /tmp/Variables
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
+
+    echo_task "Downloading $AppName $version ..."
+
+    if [[ $version == latest ]]; then
+        latest_tag=$(curl -s $autobrr_latest_url | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        download_url="${autobrr_download_url}/${latest_tag}/autobrr_${latest_tag}_linux_x86_64.tar.gz"
+    else
+        download_url="${autobrr_download_url}/v${version}/autobrr_v${version}_linux_x86_64.tar.gz"
+    fi
+
+    wget -qO /tmp/autobrr.tar.gz "$download_url" >> $OutputLOG 2>&1 || {
+        echo_error "Failed to download autobrr"
+        touch /tmp/$status_lock.2.lock
+        return 1
+    }
+
+    status_done
+
+    echo_task "Installing $AppName ..."
+    tar -xzf /tmp/autobrr.tar.gz -C /tmp/ >> $OutputLOG 2>&1 || {
+        echo_error "Failed to extract autobrr"
+        touch /tmp/$status_lock.2.lock
+        return 1
+    }
+
+    mv /tmp/autobrr /usr/local/bin/ >> $OutputLOG 2>&1 || {
+        echo_error "Failed to move autobrr binary"
+        touch /tmp/$status_lock.2.lock
+        return 1
+    }
+
+    mv /tmp/autobrrctl /usr/local/bin/ >> $OutputLOG 2>&1 || {
+        echo_error "Failed to move autobrrctl binary"
+        touch /tmp/$status_lock.2.lock
+        return 1
+    }
+
+    chmod +x /usr/local/bin/autobrr /usr/local/bin/autobrrctl >> $OutputLOG 2>&1
+    rm -f /tmp/autobrr.tar.gz
+
+    status_done
+
+    touch /tmp/$status_lock.1.lock
+    [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.lock
+    echo >> $OutputLOG
+}
+
+function create_autobrr_systemd() {
+    lines2 >> $OutputLOG
+    echo_task "Creating systemd service for $AppName ..."
+
+    cat << EOF > /etc/systemd/system/autobrr@.service
+[Unit]
+Description=autobrr service for %i
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+ExecStart=/usr/local/bin/autobrr --config=/home/%i/.config/autobrr/
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload >> $OutputLOG 2>&1
+    status_done
+}
+
+function configure_autobrr() {
+    lines2 >> $OutputLOG
+    echo_task "Configuring $AppName ..."
+
+    mkdir -p $iHome/.config/autobrr >> $OutputLOG 2>&1
+    chown -R $iUser:$iUser $iHome/.config/autobrr >> $OutputLOG 2>&1
+
+    cat << EOF > $iHome/.config/autobrr/config.toml
+# autobrr configuration
+# Generated by inexistence script
+
+host = "0.0.0.0"
+port = 7474
+
+[database]
+type = "sqlite"
+
+[log]
+level = "INFO"
+path = "/home/$iUser/.config/autobrr/logs"
+max_size = 10
+max_backups = 5
+EOF
+
+    chown $iUser:$iUser $iHome/.config/autobrr/config.toml >> $OutputLOG 2>&1
+    status_done
+}
+
+function start_autobrr() {
+    lines2 >> $OutputLOG
+    echo_task "Starting $AppName service ..."
+
+    systemctl enable autobrr@$iUser >> $OutputLOG 2>&1
+    systemctl start autobrr@$iUser >> $OutputLOG 2>&1
+
+    if systemctl is-active --quiet autobrr@$iUser; then
+        status_done
+        echo_info "autobrr is running on http://0.0.0.0:7474"
+        echo_info "Configuration file: $iHome/.config/autobrr/config.toml"
+    else
+        echo_error "Failed to start autobrr service"
+        return 1
+    fi
+}
+
+################################################################################################ Main
+
+echo_task "Installing $AppName dependencies ..."
+apt_install_check curl wget >> $OutputLOG 2>&1
+apt_install_separate
+status_done
+
+install_autobrr_binary
+create_autobrr_systemd
+
+if [[ -n $iUser ]]; then
+    configure_autobrr
+    start_autobrr
+fi
+
+[[ $debug == 1 ]] && which autobrr
+
+echo
+echo "autobrr installation completed!"
+echo "Web UI: http://your-server-ip:7474"
+echo "Config: $iHome/.config/autobrr/config.toml"
+echo
+echo "To manage the service:"
+echo "  Start:   systemctl start autobrr@$iUser"
+echo "  Stop:    systemctl stop autobrr@$iUser"
+echo "  Restart: systemctl restart autobrr@$iUser"
+echo "  Status:  systemctl status autobrr@$iUser"
+echo

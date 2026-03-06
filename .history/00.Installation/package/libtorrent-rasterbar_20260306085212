@@ -184,12 +184,8 @@ function install_lt_source() {
 
     if [[ -n $(which fpm) ]]; then
         make install     DESTDIR=$SCLocation/tmp-$AppNameLower  >> $OutputLOG 2>&1
-        # Python 3 path handling
-        python3_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-        if [[ -d $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python${python3_version}/site-packages ]]; then
-            mv $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python${python3_version}/site-packages \
-               $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python3/dist-packages
-        fi
+        mv $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/site-packages \
+           $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/dist-packages
         fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
             -p $DebLocation/$DebName-$version-$CODENAME-$arch.deb \
             -s dir -t deb -a native -m aniverse -f --description \
@@ -200,12 +196,8 @@ function install_lt_source() {
     else
         make install >> $OutputLOG 2>&1 &&
         touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
-        # Python 3 path handling
-        python3_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-        if [[ -d /usr/local/lib/python${python3_version}/site-packages ]]; then
-            mv /usr/local/lib/python${python3_version}/site-packages \
-               /usr/local/lib/python3/dist-packages
-        fi
+        mv /usr/local/lib/python2.7/site-packages \
+           /usr/local/lib/python2.7/dist-packages
     fi
 
     # [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.lock

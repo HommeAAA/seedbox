@@ -1108,8 +1108,7 @@ function END_output_url() {
 
 
 # https://www.python.org/downloads/
-# pyenv_install_python 3.7.8 / 3.8.3 / 3.9.0 / 3.10.0 / 3.11.0
-# Note: Python 2.7 support has been removed
+# pyenv_install_python 2.7.18 / 3.7.8 / 3.8.3
 function pyenv_install_python(){
     local version=$1
     major_version=$(echo ${version}| cut -d. -f1)
@@ -1122,6 +1121,10 @@ function pyenv_install_python(){
             status_done
         else
             status_failed
+        fi
+        if [[ $major_version == 2 ]]; then
+            _execute "/opt/pyenv/versions/${version}/bin/python2 -m pip install virtualenv"
+          # echo -e "Python ${version} virtualenv installed"
         fi
     else
         echo -e "Python ${version} already installed" | tee -a "$OutputLOG"
@@ -1137,17 +1140,18 @@ function pyenv_init_venv() {
     major_version=$(echo ${version}| cut -d. -f1)
     mkdir -p $path
     source /root/.bash_pyenv
-    if [[ ${major_version} == "3" ]]; then
+    if [[ ${major_version} == "2" ]]; then
+        _execute "/opt/pyenv/versions/${version}/bin/python2 -m virtualenv $path"
+    elif [[ ${major_version} == "3" ]]; then
         _execute "/opt/pyenv/versions/${version}/bin/python3 -m venv $path"
-    else
-        echo_error "Only Python 3 is supported"
-        return 1
     fi
     [[ -n $user ]] && chown -R ${user}.${user} $path
 }
 
 
-# python3 -m ensurepip or python_getpip 3 $iHome/.local/flexget3 $iUser
+# python2 <(curl -s https://bootstrap.pypa.io/get-pip.py) --force-reinstall >> "$OutputLOG" 2>&1
+# python_getpip 2
+# python_getpip 3 $iHome/.local/flexget3 $iUser
 function python_getpip() {
     local version=$1
     local path=$2
@@ -1161,11 +1165,10 @@ function python_getpip() {
             ${path}/bin/python /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
         fi
     else
-        if [[ ${major_version} == "3" ]]; then
+        if [[ ${major_version} == "2" ]]; then
+            python2 /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
+        elif [[ ${major_version} == "3" ]]; then
             python3 /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
-        else
-            echo_error "Only Python 3 is supported"
-            return 1
         fi
     fi
 }

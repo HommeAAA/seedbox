@@ -628,22 +628,7 @@ function create_config_link() {
 
 function apt_sources_replace() {
     if [[ $DISTRO == Debian ]] ; then
-        # Debian 11+ (bullseye, bookworm, trixie) use new security repo format
-        if [[ $CODENAME =~ (trixie|bookworm|bullseye) ]]; then
-            cat << EOF > /etc/apt/sources.list
-deb http://ftp.debian.org/debian/ $CODENAME main contrib non-free non-free-firmware
-deb-src http://ftp.debian.org/debian/ $CODENAME main contrib non-free non-free-firmware
-deb http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free non-free-firmware
-deb-src http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free non-free-firmware
-deb http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware
-deb-src http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware
-
-deb http://security.debian.org/debian-security $CODENAME-security main contrib non-free non-free-firmware
-deb-src http://security.debian.org/debian-security $CODENAME-security main contrib non-free non-free-firmware
-EOF
-        else
-            # Debian 10 and earlier use old security repo format
-            cat << EOF > /etc/apt/sources.list
+        cat << EOF > /etc/apt/sources.list
 deb http://ftp.debian.org/debian/ $CODENAME main contrib non-free
 deb-src http://ftp.debian.org/debian/ $CODENAME main contrib non-free
 deb http://ftp.debian.org/debian/ $CODENAME-updates main contrib non-free
@@ -654,7 +639,6 @@ deb-src http://ftp.debian.org/debian $CODENAME-backports main contrib non-free
 deb http://security.debian.org/ $CODENAME/updates main contrib non-free
 deb-src http://security.debian.org/ $CODENAME/updates main contrib non-free
 EOF
-        fi
     elif [[ $DISTRO == Ubuntu ]] ; then
         cat << EOF > /etc/apt/sources.list
 ###### Ubuntu Main Repos
@@ -696,14 +680,8 @@ EOF
         echo 'Acquire::Check-Valid-Until 0;' > /etc/apt/apt.conf.d/10-no-check-valid-until
         # apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9D6D8F6BC857C906 8B48AD6246925553 7638D0442B90D010 CBF8D6FD518E17E1
     elif [[ $DISTRO == Debian ]] && [[ $CODENAME != jessie ]] && [[ ! $(grep "$CODENAME-backports" /etc/apt/sources.list) ]] && [[ ! -f /etc/apt/sources.list.d/debian-backports.list ]] ; then
-        # Debian 11+ includes non-free-firmware component
-        if [[ $CODENAME =~ (trixie|bookworm|bullseye) ]]; then
-            echo "deb http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware"     >> /etc/apt/sources.list.d/debian-backports.list
-            echo "deb-src http://ftp.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian-backports.list
-        else
-            echo "deb http://ftp.debian.org/debian $CODENAME-backports main"     >> /etc/apt/sources.list.d/debian-backports.list
-            echo "deb-src http://ftp.debian.org/debian $CODENAME-backports main" >> /etc/apt/sources.list.d/debian-backports.list
-        fi
+        echo "deb http://ftp.debian.org/debian $CODENAME-backports main"     >> /etc/apt/sources.list.d/debian-backports.list
+        echo "deb-src http://ftp.debian.org/debian $CODENAME-backports main" >> /etc/apt/sources.list.d/debian-backports.list
     fi
 }
 
@@ -1108,8 +1086,7 @@ function END_output_url() {
 
 
 # https://www.python.org/downloads/
-# pyenv_install_python 3.7.8 / 3.8.3 / 3.9.0 / 3.10.0 / 3.11.0
-# Note: Python 2.7 support has been removed
+# pyenv_install_python 2.7.18 / 3.7.8 / 3.8.3
 function pyenv_install_python(){
     local version=$1
     major_version=$(echo ${version}| cut -d. -f1)
@@ -1122,6 +1099,10 @@ function pyenv_install_python(){
             status_done
         else
             status_failed
+        fi
+        if [[ $major_version == 2 ]]; then
+            _execute "/opt/pyenv/versions/${version}/bin/python2 -m pip install virtualenv"
+          # echo -e "Python ${version} virtualenv installed"
         fi
     else
         echo -e "Python ${version} already installed" | tee -a "$OutputLOG"
@@ -1137,17 +1118,18 @@ function pyenv_init_venv() {
     major_version=$(echo ${version}| cut -d. -f1)
     mkdir -p $path
     source /root/.bash_pyenv
-    if [[ ${major_version} == "3" ]]; then
+    if [[ ${major_version} == "2" ]]; then
+        _execute "/opt/pyenv/versions/${version}/bin/python2 -m virtualenv $path"
+    elif [[ ${major_version} == "3" ]]; then
         _execute "/opt/pyenv/versions/${version}/bin/python3 -m venv $path"
-    else
-        echo_error "Only Python 3 is supported"
-        return 1
     fi
     [[ -n $user ]] && chown -R ${user}.${user} $path
 }
 
 
-# python3 -m ensurepip or python_getpip 3 $iHome/.local/flexget3 $iUser
+# python2 <(curl -s https://bootstrap.pypa.io/get-pip.py) --force-reinstall >> "$OutputLOG" 2>&1
+# python_getpip 2
+# python_getpip 3 $iHome/.local/flexget3 $iUser
 function python_getpip() {
     local version=$1
     local path=$2
@@ -1161,11 +1143,10 @@ function python_getpip() {
             ${path}/bin/python /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
         fi
     else
-        if [[ ${major_version} == "3" ]]; then
+        if [[ ${major_version} == "2" ]]; then
+            python2 /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
+        elif [[ ${major_version} == "3" ]]; then
             python3 /tmp/get-pip.py --force-reinstall >> "$OutputLOG" 2>&1
-        else
-            echo_error "Only Python 3 is supported"
-            return 1
         fi
     fi
 }

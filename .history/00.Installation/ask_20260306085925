@@ -327,23 +327,6 @@ function ask_flexget() {
     fi
 }
 
-function ask_autobrr() {
-    while [[ -z $InsAutobrr ]]; do
-        [[ $autobrr_installed == Yes ]] && echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang autobrr${normal}"
-        read -ep "${bold}${yellow}$lang_would_you_like_to_install autobrr?${normal} [Y]es or [${cyan}N${normal}]o: " responce
-        case $responce in
-            [yY] | [yY][Ee][Ss]  ) InsAutobrr=Yes ;;
-            [nN] | [nN][Oo] | "" ) InsAutobrr=No ;;
-            *) InsAutobrr=No ;;
-        esac
-    done
-    if [ $InsAutobrr == Yes ]; then
-        echo -e "${bold}${baiqingse}autobrr${normal} ${bold}$lang_will_be_installed${normal}\n"
-    else
-        echo -e "${baizise}autobrr will ${baihongse}not${baizise} be installed${normal}\n"
-    fi
-}
-
 function ask_rclone() {
     while [[ -z $InsRclone ]]; do
         [[ $rclone_installed == Yes ]] && echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang rclone${normal}"
@@ -938,10 +921,6 @@ function do_installation() {
     if [[ $InsFlex == Yes ]]; then
         bash $local_packages/package/flexget/install   --logbase $LogTimes
         bash $local_packages/package/flexget/configure --logbase $LogTimes -u $iUser -p $iPass -w 9566 $force_recover
-    fi
-    if [[ $InsAutobrr == Yes ]]; then
-        bash $local_packages/package/autobrr/install   --logbase $LogTimes
-        bash $local_packages/package/autobrr/configure --logbase $LogTimes -u $iUser -p $iPass
     fi
     if [[ $InsRclone == Yes ]]; then
         bash $local_packages/package/rclone/install --logbase $LogTimes

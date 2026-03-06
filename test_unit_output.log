@@ -1,0 +1,157 @@
+╔════════════════════════════════════════╗
+║   Debian 13 全面兼容性审查            ║
+║          单元测试套件                  ║
+╚════════════════════════════════════════╝
+
+
+=========================================
+1. 核心组件语法检查
+=========================================
+检查所有核心脚本的 Bash 语法...
+✅ PASS: 语法正确: inexistence.sh
+✅ PASS: 语法正确: 00.Installation/function
+✅ PASS: 语法正确: 00.Installation/ask
+✅ PASS: 语法正确: 00.Installation/options
+
+=========================================
+2. 软件包模块检查
+=========================================
+检查所有软件包模块...
+✅ PASS: 软件包目录存在: autobrr
+✅ PASS:   install 脚本语法正确: autobrr
+✅ PASS:   configure 脚本语法正确: autobrr
+✅ PASS: 软件包目录存在: deluge
+❌ FAIL:   install 脚本语法错误: deluge
+✅ PASS:   configure 脚本语法正确: deluge
+✅ PASS: 软件包目录存在: flexget
+✅ PASS:   install 脚本语法正确: flexget
+✅ PASS:   configure 脚本语法正确: flexget
+✅ PASS: 软件包目录存在: mono
+✅ PASS:   install 脚本语法正确: mono
+✅ PASS: 软件包目录存在: novnc
+✅ PASS:   install 脚本语法正确: novnc
+✅ PASS:   configure 脚本语法正确: novnc
+✅ PASS: 软件包目录存在: qbittorrent
+✅ PASS:   install 脚本语法正确: qbittorrent
+✅ PASS:   configure 脚本语法正确: qbittorrent
+✅ PASS: 软件包目录存在: rclone
+✅ PASS:   install 脚本语法正确: rclone
+✅ PASS: 软件包目录存在: transmission
+✅ PASS:   install 脚本语法正确: transmission
+✅ PASS:   configure 脚本语法正确: transmission
+✅ PASS: 软件包目录存在: vnstat
+✅ PASS:   install 脚本语法正确: vnstat
+✅ PASS: 软件包目录存在: wine
+✅ PASS:   install 脚本语法正确: wine
+
+=========================================
+3. 独立脚本检查
+=========================================
+检查所有独立脚本...
+✅ PASS: 脚本语法正确: docker
+✅ PASS: 脚本语法正确: filebrowser
+✅ PASS: 脚本语法正确: fpm
+✅ PASS: 脚本语法正确: libtorrent-rasterbar
+✅ PASS: 脚本语法正确: npm
+✅ PASS: 脚本语法正确: pyenv
+
+=========================================
+4. 系统检测逻辑测试
+=========================================
+测试所有支持的系统版本...
+✅ PASS: Debian 13: SysSupport=1
+✅ PASS: Debian 12: SysSupport=1
+✅ PASS: Debian 11: SysSupport=1
+✅ PASS: Debian 10: SysSupport=1
+✅ PASS: Debian 9: SysSupport=2
+✅ PASS: Debian 8: SysSupport=3
+✅ PASS: Ubuntu 18.04: SysSupport=1
+✅ PASS: Ubuntu 16.04: SysSupport=2
+
+=========================================
+5. rTorrent 版本检测测试
+=========================================
+✅ PASS: Debian 13: rtorrent_dev=1
+✅ PASS: Debian 12: rtorrent_dev=1
+✅ PASS: Debian 11: rtorrent_dev=1
+✅ PASS: Debian 10: rtorrent_dev=1
+✅ PASS: Debian 9: rtorrent_dev=1
+✅ PASS: Ubuntu 18.04: rtorrent_dev=1
+✅ PASS: Ubuntu 16.04: rtorrent_dev=0
+✅ PASS: Debian 8: rtorrent_dev=0
+
+=========================================
+6. APT 源配置测试
+=========================================
+✅ PASS: Debian 13: APT 源配置正确
+✅ PASS: Debian 12: APT 源配置正确
+✅ PASS: Debian 11: APT 源配置正确
+✅ PASS: Debian 10: APT 源配置正确
+✅ PASS: Debian 9: APT 源配置正确
+
+=========================================
+7. Python 2.7 移除验证
+=========================================
+✅ PASS: 无 Python 2.7 引用: function
+✅ PASS: 无 Python 2.7 引用: install
+✅ PASS: 无 Python 2.7 引用: configure
+✅ PASS: 无 Python 2.7 引用: libtorrent-rasterbar
+
+=========================================
+8. autobrr 集成验证
+=========================================
+✅ PASS: autobrr install 脚本存在
+✅ PASS: autobrr install 函数存在
+✅ PASS: autobrr systemd 函数存在
+✅ PASS: autobrr configure 脚本存在
+✅ PASS: autobrr configure 函数存在
+✅ PASS: autobrr 用户创建函数存在
+✅ PASS: ask 文件中包含 ask_autobrr
+✅ PASS: ask 文件中使用 InsAutobrr 变量
+✅ PASS: options 文件中包含 --autobrr
+✅ PASS: options 文件中包含 --no-autobrr
+✅ PASS: 主脚本调用 ask_autobrr
+✅ PASS: 主脚本使用 InsAutobrr 变量
+
+=========================================
+9. 代码质量检查
+=========================================
+✅ PASS: 括号匹配: inexistence.sh
+✅ PASS: 括号匹配: function
+✅ PASS: 括号匹配: ask
+✅ PASS: 括号匹配: options
+✅ PASS: 括号匹配: install
+✅ PASS: 括号匹配: configure
+✅ PASS: 括号匹配: install
+✅ PASS: 括号匹配: configure
+✅ PASS: 括号匹配: libtorrent-rasterbar
+
+=========================================
+10. 安全性检查
+=========================================
+✅ PASS: 未发现硬编码密码
+✅ PASS: 权限设置安全
+✅ PASS: 使用了适当的权限提升
+
+=========================================
+11. 边界情况测试
+=========================================
+✅ PASS: 未知系统版本正确处理
+✅ PASS: 空值正确处理
+✅ PASS: 特殊字符版本号正确处理
+
+=========================================
+单元测试总结
+=========================================
+
+╔════════════════════════════════════════╗
+║          测试结果统计                 ║
+╚════════════════════════════════════════╝
+
+✅ 通过: 87
+❌ 失败: 1
+⚠️  警告: 0
+
+╔════════════════════════════════════════╗
+║   ❌ 有 1 个单元测试失败   ║
+╚════════════════════════════════════════╝

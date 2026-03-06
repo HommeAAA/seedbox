@@ -161,7 +161,7 @@ check_status $status_lock
 [[ $debug == 1 ]] && which flexget
 
 
-################################################################################################ Deprecated (Python 2.7 support removed)
+################################################################################################ Deprecated
 
 
 function deprecated_codes_backup_here() {
@@ -174,3 +174,27 @@ function deprecated_codes_backup_here() {
     fi
 }
 
+
+function install_flexget2_user() {
+    echo >> $OutputLOG
+
+    apt_install_check    python python-dev python-pip
+    apt_install_separate
+    python2 -m pip install --upgrade pip >> "$OutputLOG" 2>&1
+    python2 -m pip install pathlib >> "$OutputLOG" 2>&1
+    python2 -m pip install transmissionrpc deluge-client >> "$OutputLOG" 2>&1
+
+    if [[ -z $user ]]; then
+        python2 -m pip install flexget >> "$OutputLOG" 2>&1
+    else
+        su $user -c 'python2 -m pip install flexget --user' >> "$OutputLOG" 2>&1
+        export PATH=/home/$user/.local/bin:$PATH
+    fi
+
+    status_lock=$AppNameLower
+    echo "status_lock=$status_lock" > /tmp/Variables
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock 
+    which flexget > /dev/null && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+    [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.lock
+    echo >> $OutputLOG
+}

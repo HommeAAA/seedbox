@@ -187,7 +187,6 @@ function ask_continue() {
 
     echo "                  ${cyan}${bold}Transmission${normal}  ${bold}${yellow}${tr_version}${normal}"
     echo "                  ${cyan}${bold}FlexGet${normal}       ${bold}${yellow}${InsFlex}${normal}"
-    echo "                  ${cyan}${bold}autobrr${normal}       ${bold}${yellow}${InsAutobrr}${normal}"
     echo "                  ${cyan}${bold}FileBrowser${normal}   ${bold}${yellow}${InsFB}${normal}"
     echo "                  ${cyan}${bold}System Tweak${normal}  ${bold}${yellow}${UseTweaks}${normal}"
     echo "                  ${cyan}${bold}Threads${normal}       ${bold}${yellow}${MAXCPUS}${normal}"
@@ -458,7 +457,6 @@ ask_deluge
 ask_rtorrent
 ask_transmission
 ask_flexget
-ask_autobrr
 ask_filebrowser
 ask_tweaks
 
