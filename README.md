@@ -47,16 +47,164 @@
 
 ## Usage
 
+### 快速开始
+
 如果你是新手，对很多选项不甚了解，直接用这个就完事了（账号密码部分替换一下）：  
-```
+
+```bash
 bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
 -y --tweaks --bbr --rclone --no-system-upgrade --flexget --autobrr --tr-deb --filebrowser \
 --de 1.3.15 --rt 0.9.8 --qb 4.1.9 -u 这十二个字换成你的用户名 -p 这十个字换成你的密码
 ```
+
+### 自定义安装
+
 如果你需要自定义安装选项：  
-```
+
+```bash
 bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh)
 ```
+
+### 常见使用场景
+
+#### 场景 1：最小化安装（只安装基本工具）
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --no-qb --no-de --no-rt --no-tr --no-flexget --no-autobrr --no-filebrowser \
+--tweaks --bbr -u username -p password123
+```
+
+#### 场景 2：只安装 qBittorrent 和 autobrr
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --autobrr --no-de --no-rt --no-tr --no-flexget --no-filebrowser \
+--tweaks -u username -p password123
+```
+
+#### 场景 3：完整安装（所有功能）
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --de 1.3.15 --rt 0.9.8 --tr-deb --flexget --autobrr --filebrowser \
+--tweaks --bbr --rclone --tools -u username -p password123
+```
+
+#### 场景 4：Debian 13 专用安装
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --de 2.0.3 --rt 0.9.8 --flexget --autobrr --filebrowser \
+--tweaks --bbr -u username -p password123
+```
+
+### 命令行参数说明
+
+#### 通用参数
+- `-y` - 跳过所有确认提示，无交互安装
+- `-u <username>` - 设置用户名（4-16 位，字母开头）
+- `-p <password>` - 设置密码（至少 8 位，包含字母和数字）
+- `-s` - 跳过系统支持检查
+- `--no-source-change` - 不更换软件源
+
+#### 系统优化参数
+- `--tweaks` - 启用系统优化（默认启用）
+- `--no-tweaks` - 禁用系统优化
+- `--bbr` - 启用 BBR 拥塞控制
+- `--no-bbr` - 禁用 BBR
+- `--swap` - 启用 swap
+- `--no-swap` - 禁用 swap
+- `--rclone` - 安装 rclone 和 gclone
+- `--tools` - 安装额外工具（mediainfo、mkvtoolnix、ffmpeg 等）
+
+#### 编译参数
+- `--mt-single` - 单线程编译
+- `--mt-double` - 双线程编译
+- `--mt-half` - 使用一半 CPU 线程编译
+- `--mt-max` - 使用全部 CPU 线程编译（默认）
+
+#### BT 客户端参数
+- `--qb <version>` - 安装 qBittorrent（如：--qb 4.3.9）
+- `--qb-static` - 使用静态编译版本
+- `--no-qb` - 不安装 qBittorrent
+- `--de <version>` - 安装 Deluge（如：--de 1.3.15）
+- `--no-de` - 不安装 Deluge
+- `--rt <version>` - 安装 rTorrent（如：--rt 0.9.8）
+- `--no-rt` - 不安装 rTorrent
+- `--tr-deb` - 安装 Transmission（deb 版本）
+- `--no-tr` - 不安装 Transmission
+
+#### 自动化工具参数
+- `--flexget` - 安装 FlexGet
+- `--no-flexget` - 不安装 FlexGet
+- `--autobrr` - 安装 autobrr（🆕 推荐）
+- `--no-autobrr` - 不安装 autobrr
+
+#### 其他工具参数
+- `--filebrowser` - 安装 FileBrowser Enhanced
+- `--no-filebrowser` - 不安装 FileBrowser
+- `--flood` - 安装 Flood（rTorrent WebUI）
+- `--vnc` - 安装 VNC 远程桌面
+- `--x2go` - 安装 X2Go 远程桌面
+- `--wine` - 安装 Wine
+- `--mono` - 安装 Mono
+
+#### 系统升级参数
+- `--system-upgrade` - 升级系统
+- `--no-system-upgrade` - 不升级系统
+
+#### libtorrent 参数
+- `--lt RC_1_1` - 使用 libtorrent RC_1_1（默认）
+- `--lt RC_1_0` - 使用 libtorrent RC_1_0
+- `--lt system` - 使用系统自带版本
+- `--lt <version>` - 使用指定版本
+
+### 推荐配置
+
+#### 轻量级配置（1GB 内存）
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --no-de --no-rt --no-tr --flexget --autobrr \
+--tweaks --swap --mt-half -u username -p password123
+```
+
+#### 标准配置（2GB+ 内存）
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --de 1.3.15 --rt 0.9.8 --flexget --autobrr --filebrowser \
+--tweaks --bbr -u username -p password123
+```
+
+#### 高性能配置（4GB+ 内存）
+```bash
+bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh) \
+-y --qb 4.3.9 --de 1.3.15 --rt 0.9.8 --tr-deb --flexget --autobrr --filebrowser \
+--tweaks --bbr --rclone --tools -u username -p password123
+```
+
+### 注意事项
+
+1. **系统要求**
+   - 支持 Debian 9/10/11/12/13
+   - 支持 Ubuntu 16.04/18.04
+   - 推荐 Debian 12/13 获得最佳体验
+   - 需要 root 权限运行
+
+2. **内存要求**
+   - 最小 512MB 内存（启用 swap）
+   - 推荐 2GB+ 内存
+   - 编译安装时建议 1GB+ 内存
+
+3. **网络要求**
+   - 需要访问 GitHub 和 Debian/Ubuntu 官方源
+   - 如果网络受限，可能需要配置代理
+
+4. **安装时间**
+   - 最小安装：约 10-15 分钟
+   - 标准安装：约 20-30 分钟
+   - 完整安装：约 40-60 分钟
+
+5. **磁盘空间**
+   - 最小安装：约 2GB
+   - 标准安装：约 5GB
+   - 完整安装：约 10GB
 
 ## Installation Guide
 
